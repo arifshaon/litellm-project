@@ -18,7 +18,7 @@ Full architecture, limitations and acceptance matrix: [Implementation plan](impl
 
 The relevant transfer skills are: writing Python HTTP services, safeguarding an externally accessible route, containerised/cloud system design, backend integrations, data processing, operational debugging, and designing verifiable tests.
 
-**Experience boundary:** Previous production **LiteLLM + Presidio + AWS ECS/Fargate** work is **not claimed** in this bid. The paid UK-detector trial and first LiteLLM integration are explicit technical qualification checkpoints. The plan depends on demonstrated results from those gates, not an unsupported claim of extensive experience with all three products.
+**Experience boundary:** Previous production **LiteLLM + Presidio + AWS ECS/Fargate** work is **not claimed** in this bid. Production **NestJS/Next.js** delivery is not claimed either. The TypeScript layer is deliberately kept as a thin control plane and dashboard, and all privacy-critical logic stays in Python, where the proposer has 15+ years of experience. The paid UK-detector trial and first LiteLLM integration are explicit technical qualification checkpoints. The plan depends on demonstrated results from those gates, not an unsupported claim of extensive experience with all three products.
 
 ## Proposed commercial offer
 
@@ -85,11 +85,12 @@ The trial should not include real customer data; use synthetic identifiers. Its 
 - **Streaming contract.** Is a nonstreaming pilot acceptable for requests containing placeholders if real-time restoration cannot meet correctness tests?
 - **Semantic-cache performance.** Is the semantic-hit p95 to be set after testing with a local embedding option? Exact hit and miss performance should be measured independently.
 - **Batch provider scope.** Is OpenAI-first batching sufficient for December, with Anthropic/Google as a post-pilot phase?
+- **Holiday acceptance window.** M5 spans 25–26 December UK bank holidays. Agree in M1 who signs off the final demo and when, for example a pre-recorded drill on 23 December and a live sign-off in the week of 28 December.
 - **Provider key model.** Are credentials shared by platform with tenant cost allocation, or customer-supplied per organisation? This affects deployment, secrets and data boundaries.
 
 ## Security and licensing commitment
 
-No second inference gateway. No GPL/AGPL or Enterprise-only code without prior approval. Do not store prompt text in audit/ledger. Use restrictive AWS IAM and private administration. Confirm a **safe, pinned immutable** LiteLLM image with signed/provenance checks and incident review (including the **21 October 2026 v1.107.0 compromise**); avoid floating image tags and rotate secrets on suspected compromise.
+No second inference gateway. No GPL/AGPL or Enterprise-only code without prior approval. Do not store prompt text in audit/ledger. Use restrictive AWS IAM and private administration. Confirm a **safe, pinned immutable** LiteLLM image with signed/provenance checks and incident review (including the **24 March 2026 `1.82.7`/`1.82.8`** and **21 October 2026 `1.107.0`** compromises and CVE-2026-42208); avoid floating image tags and rotate secrets on suspected compromise.
 
 ## Communication and ownership
 

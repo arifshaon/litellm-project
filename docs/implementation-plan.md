@@ -60,7 +60,7 @@
 
 ### 3.2 UK PII detection, anonymisation and restoration
 
-**Approach:** Microsoft Presidio's analyzer/anonymizer libraries plus custom UK recognisers wrapped in a **synchronous, in-process Python policy hook**. Built-in LiteLLM Presidio uses HTTP services; in-process reuse is a deliberate custom engineering choice to benchmark. If the custom hook proves unsafe or incompatible, evaluate the supported `pre_call` Presidio service deployment and document any latency impact.
+**Approach:** Microsoft Presidio's analyzer/anonymizer libraries plus custom UK recognisers wrapped in a **synchronous, in-process Python policy hook**. Built-in LiteLLM Presidio uses HTTP services; in-process reuse is a deliberate custom engineering choice to benchmark. If the custom hook proves unsafe or incompatible, evaluate the supported `pre_call` Presidio service deployment and document any latency impact. The built-in `during_call` mode (parallel with the provider call) and `logging_only` mode are **never** acceptable for upstream masking.
 
 - Detectors: NI numbers with formatting/validity guards; NHS numbers (10 digits; NHS Modulus 11 check digit, reject invalid checksum); UK postcodes (canonical grammar plus normalisation); core entities (email, phone, name/address) from Presidio recognisers. Assess false positives and ambiguous identifiers.
 - Per request, replace entities with typed indexed placeholders, e.g. `<PERSON_1>`, `<NHS_1>`. Bind placeholder maps to one authenticated request/response context, **never to a global cache**.
@@ -98,7 +98,7 @@
 
 ### 3.5 Pilot differentiators
 
-**Batch Autopilot:** explicitly asynchronous `can_wait` contract with job ID, polling and optional webhook. For the December pilot, **OpenAI provider batch integration first**; support for Anthropic/Google batch transport can be priced/gated separately if needed. All JSONL lines must be masked **before** upload, regardless of whether LiteLLM's ordinary `pre_call` hook runs on batch/file endpoints. Retain a tenant-bound mapping safely for completion restoration: encrypt with KMS envelope keys, strict TTL, restrict read access, scrub on expiry and document retention. Log only status/IDs. Verify operational batch cancellation/retry/idempotency and completion delivery before demo.
+**Batch Autopilot:** explicitly asynchronous `can_wait` contract with job ID, polling and optional webhook. For the December pilot, **OpenAI provider batch integration first**; support for Anthropic/Google batch transport can be priced/gated separately if needed. All JSONL lines must be masked **before** upload, regardless of whether LiteLLM's ordinary `pre_call` hook runs on batch/file endpoints. Retain a tenant-bound mapping safely for completion restoration: encrypt with KMS envelope keys, strict TTL, restrict read access, scrub on expiry and document retention. Log only status/IDs. Verify operational batch cancellation/retry/idempotency and completion delivery before demo. LiteLLM documents batch cost tracking on its unified `/batches` route as Enterprise-only, so the worker records batch token usage itself and the ledger prices it from the versioned catalogue at the provider's batch rate. LiteLLM's Anthropic `/v1/messages/batches` passthrough is a candidate post-pilot route, still behind the same pre-upload masking.
 
 **Cache Doctor:** first iteration is a report detecting prompt patterns correlated with poor caching (unstable timestamps, changing system prefixes, volatile formatting and ordering). Produce actionable observations and candidate normalisation rules; no silent rewriting of sensitive prompts.
 
@@ -124,7 +124,8 @@
 - Private subnets/security groups as appropriate; no public database/Redis. Administrative LiteLLM UI and master key endpoints restricted to a private/admin access path; no public admin UI through the inference ALB.
 - AWS Secrets Manager for provider keys and data-plane credentials; scoped task IAM; CloudTrail; CloudWatch alarms; deployment with reproducible IaC and least-privilege policies. Confirm OSS integration details for each secret access pattern; custom secret loading if required.
 - Supply chain: **never `latest`** for LiteLLM; confirm safe release and pinned immutable digest; lock dependencies, build SBOM, scan vulnerabilities and licences, verify signatures/provenance where supplied, rotate keys if exposure suspected.
-- The 21 October 2026 LiteLLM `1.107.0` supply-chain compromise makes a mandatory release-review step important. At this proposal date the vendor advises `1.106.2` or an earlier verified version; **revalidate before deployment**, since no version is declared permanently safe here.
+- LiteLLM had two release compromises in 2026: PyPI `1.82.7`/`1.82.8` on 24 March, and `1.107.0` on 21 October across PyPI, Docker Hub and GHCR, where the `latest`, `main-latest` and `main-stable` tags were also redirected. CVE-2026-42208 (SQL injection) is on CISA's Known Exploited list. A mandatory release-review step is therefore part of every upgrade. The pinned build must be newer than `1.83.0` (post-March audit fixes), must not be `1.107.0`, and must include the fix for CVE-2026-42208. At this proposal date the vendor advises `1.106.2`. **Revalidate before deployment**, since no version is declared permanently safe here.
+- Plan for a shared credential blast radius. The gateway holds every tenant's provider keys, so the rotation runbook covers provider keys, master/virtual keys, the database password and the task IAM role, and is drilled once before pilot.
 - Production alerts for task health, auth failures, repeated PII blocks, cache health, high error rates, spend spikes, reconciliation lag and queue age. No raw prompts in alert payloads.
 
 ## 5. Verification matrix / acceptance
@@ -167,5 +168,8 @@ Detailed measurable baselines, exact p95 traffic distributions, payload sizes an
 
 - [LiteLLM Enterprise / OSS feature matrix](https://docs.litellm.ai/docs/enterprise)
 - [Presidio PII masking in LiteLLM](https://docs.litellm.ai/docs/proxy/guardrails/pii_masking_v2)
+- [LiteLLM Presidio PII masking tutorial](https://docs.litellm.ai/docs/tutorials/presidio_pii_masking)
+- [LiteLLM batches documentation](https://docs.litellm.ai/docs/batches)
 - [LiteLLM October 2026 incident advisory](https://docs.litellm.ai/blog/security-incident-oct-21-2026)
+- [LiteLLM security blog, including the March 2026 incident](https://docs.litellm.ai/blog/tags/security)
 - [Microsoft Presidio](https://microsoft.github.io/presidio/)
